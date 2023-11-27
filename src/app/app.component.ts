@@ -11,33 +11,60 @@ export class AppComponent {
   githubUsername = '';
   user: any;
   repositories: any[] = [];
-  isLoading = false;
+  isLoadingUser = false;
+  isLoadingRepos = false;
   currentPage = 1;
   itemsPerPage = 10;
   maxItemsPerPage = 100;
+  isLoading = false;
+  searchPerformed = false; 
 
   constructor(private apiService: ApiService) {}
 
-  setLoadingState(isLoading: boolean) {
-    this.isLoading = isLoading;
+  private setLoadingStateWithDelay(isLoading: boolean, delay: number) {
+    setTimeout(() => {
+      this.isLoading = isLoading;
+    }, delay);
+  }
+
+  setLoadingStates(isLoadingUser: boolean, isLoadingRepos: boolean) {
+    this.isLoadingUser = isLoadingUser;
+    this.isLoadingRepos = isLoadingRepos;
   }
 
   searchUser() {
-    this.setLoadingState(true);
-    this.apiService.getUser(this.githubUsername).subscribe((user) => {
-      this.user = user;
-      this.loadRepositories();
-    });
+    this.searchPerformed = true; 
+    this.setLoadingStateWithDelay(true, 1000);
+    this.apiService.getUser(this.githubUsername).subscribe(
+      (user) => {
+        this.user = user;
+        this.loadRepositories();
+      },
+      (error) => {
+        console.error('Error fetching user:', error);
+        this.setLoadingStates(false, false);
+        this.user = null;
+        this.repositories = [];
+        this.setLoadingStateWithDelay(false, 0);
+      }
+    );
   }
 
   loadRepositories() {
-    this.setLoadingState(true);
-    this.apiService
-      .getReposWithPagination(this.githubUsername, this.currentPage, this.itemsPerPage)
-      .subscribe((repos) => {
+    this.setLoadingStates(false, true);
+    this.apiService.getReposWithPagination(this.githubUsername, this.currentPage, this.itemsPerPage).subscribe(
+      (repos) => {
         this.repositories = repos;
-        this.setLoadingState(false);
-      });
+        this.setLoadingStates(false, false);
+        this.setLoadingStateWithDelay(false, 0);
+      },
+      (error) => {
+        console.error('Error fetching repositories:', error);
+        this.setLoadingStates(false, false);
+        this.repositories = [];
+        this.setLoadingStateWithDelay(false, 0);
+      }
+    );
   }
 
   changePage(newPage: number) {
