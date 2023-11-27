@@ -17,7 +17,7 @@ export class AppComponent {
   itemsPerPage = 10;
   maxItemsPerPage = 100;
   isLoading = false;
-  searchPerformed = false; 
+  searchPerformed = false;
 
   constructor(private apiService: ApiService) {}
 
@@ -33,10 +33,10 @@ export class AppComponent {
   }
 
   searchUser() {
-    this.searchPerformed = true; 
     this.setLoadingStateWithDelay(true, 1000);
     this.apiService.getUser(this.githubUsername).subscribe(
       (user) => {
+        this.searchPerformed = true;  // Set searchPerformed here
         this.user = user;
         this.loadRepositories();
       },
